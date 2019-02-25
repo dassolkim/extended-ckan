@@ -189,10 +189,25 @@ def resource_delete(context, data_dict):
     except ValidationError as e:
         errors = e.error_dict['resources'][-1]
         raise ValidationError(errors)
+    import ckan.lib.uploader as uploader
+    import os
+    def file_remove(id):
+        storage_path = uploader.get_storage_path()
+        directory = os.path.join(storage_path, 'resources', id[0:3], id[3:6])
+        filepath = os.path.join(directory, id[6:])
+
+        try:
+            os.remove(filepath)
+            os.removedirs(directory)
+            log.info(u'Resource file in %s has been deleted.' % filepath)
+        except OSError, e:
+            log.debug(u'Error: %s - %s.' % (e.filename, e.strerror))
+            pass
 
     for plugin in plugins.PluginImplementations(plugins.IResourceController):
         plugin.after_delete(context, pkg_dict.get('resources', []))
 
+    file_remove(id)
     model.repo.commit()
 
 
