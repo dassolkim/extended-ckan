@@ -13,6 +13,8 @@ import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import g, _, config, request
+import requests
+import json
 
 log = logging.getLogger(__name__)
 
@@ -140,6 +142,7 @@ class ConfigView(MethodView):
 
 
 class TrashView(MethodView):
+
     def __init__(self):
         self.deleted_packages = model.Session.query(
             model.Package).filter_by(state=model.State.DELETED)
@@ -161,7 +164,21 @@ class TrashView(MethodView):
                 u'purge-revisions' in request.form):
             if u'purge-packages' in request.form:
                 revs_to_purge = []
+
                 for pkg in self.deleted_packages:
+                    print('################################ view.admin.trash line 170 #############################')
+                    package_id = pkg.id
+                    deleted_resource = model.Session.query(
+                        model.Resource).filter_by(package_id=package_id)
+                    for resource in deleted_resource:
+                        print(resource)
+                        resource_id = resource.id
+                        logic.get_action('file_remove')(config, {'resource_id': resource_id})  # working well
+                        logic.get_action('dsfile_remove')(config, {'id': resource_id})
+
+                        print('################################ view.admin.trash line 180 #############################')
+                        print('finish file_remove and datastore_delete resource_id= {0}').format(resource_id)
+
                     revisions = [x[0] for x in pkg.all_related_revisions]
                     # ensure no accidental purging of other(non-deleted)
                     # packages initially just avoided purging revisions
@@ -209,7 +226,6 @@ class TrashView(MethodView):
 
 
 admin.add_url_rule(u'/', view_func=index, strict_slashes=False)
-admin.add_url_rule(
-    u'/reset_config', view_func=ResetConfigView.as_view(str(u'reset_config')))
+admin.add_url_rule(u'/reset_config', view_func=ResetConfigView.as_view(str(u'reset_config')))
 admin.add_url_rule(u'/config', view_func=ConfigView.as_view(str(u'config')))
 admin.add_url_rule(u'/trash', view_func=TrashView.as_view(str(u'trash')))
