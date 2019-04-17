@@ -189,26 +189,47 @@ def resource_delete(context, data_dict):
     except ValidationError as e:
         errors = e.error_dict['resources'][-1]
         raise ValidationError(errors)
-    import ckan.lib.uploader as uploader
-    import os
-    def file_remove(id):
-        storage_path = uploader.get_storage_path()
-        directory = os.path.join(storage_path, 'resources', id[0:3], id[3:6])
-        filepath = os.path.join(directory, id[6:])
-
-        try:
-            os.remove(filepath)
-            os.removedirs(directory)
-            log.info(u'Resource file in %s has been deleted.' % filepath)
-        except OSError, e:
-            log.debug(u'Error: %s - %s.' % (e.filename, e.strerror))
-            pass
 
     for plugin in plugins.PluginImplementations(plugins.IResourceController):
         plugin.after_delete(context, pkg_dict.get('resources', []))
 
-    file_remove(id)
     model.repo.commit()
+
+import requests
+import json
+
+def dsfile_remove(context, data_dict):
+
+    id = data_dict.get('id')
+    url = 'http://114.70.235.44:65000/api/action/datastore_delete'
+    headers = {'Content-Type': 'application/json', 'Authorization': 'f91cafff-3f29-4e03-8dfb-ba30d74b4c81'}
+    data = {'resource_id': id, 'force': True}
+    response = requests.post(url=url, headers=headers, data=json.dumps(data))
+    print('################################## finish delete resource in datastore ##########################')
+    print(response)
+    print(response.json())
+
+import ckan.lib.uploader as uploader
+import os
+
+def file_remove(context, data_dict):
+
+    resource_id = data_dict.get('resource_id')
+    storage_path = uploader.get_storage_path()
+    directory = os.path.join(storage_path, 'resources', resource_id[0:3], resource_id[3:6])
+    filepath = os.path.join(directory, resource_id[6:])
+    print('################################## finish delete resource in filestore ##########################')
+    print(directory)
+    print(filepath)
+    try:
+        os.remove(filepath)
+        print('remove filepath {0}').format(filepath)
+        os.removedirs(directory)
+        print('remove directory {0}').format(directory)
+        log.info(u'Resource file in %s has been deleted.' % filepath)
+    except OSError, e:
+        log.debug(u'Error: %s - %s.' % (e.filename, e.strerror))
+        pass
 
 
 def resource_view_delete(context, data_dict):

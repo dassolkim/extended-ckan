@@ -135,7 +135,8 @@ def resource_update(context, data_dict):
 
     for plugin in plugins.PluginImplementations(plugins.IResourceController):
         plugin.after_update(context, resource)
-
+    print('############################## check resource update in update.resource_update line 138 ############################')
+    print(resource)
     return resource
 
 

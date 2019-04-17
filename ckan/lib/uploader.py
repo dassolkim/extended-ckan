@@ -229,6 +229,8 @@ class ResourceUpload(object):
 
             self.filename = upload_field_storage.filename
             self.filename = munge.munge_filename(self.filename)
+            print('############################# check lib.uploader url check line 232 ##############################')
+            print(self.filename)
             resource['url'] = self.filename
             resource['url_type'] = 'upload'
             resource['last_modified'] = datetime.datetime.utcnow()
