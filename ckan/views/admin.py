@@ -13,8 +13,7 @@ import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import g, _, config, request
-import requests
-import json
+import ckan.plugins as plugins
 
 log = logging.getLogger(__name__)
 
@@ -166,18 +165,20 @@ class TrashView(MethodView):
                 revs_to_purge = []
 
                 for pkg in self.deleted_packages:
-                    print('################################ view.admin.trash line 170 #############################')
                     package_id = pkg.id
                     deleted_resource = model.Session.query(
                         model.Resource).filter_by(package_id=package_id)
                     for resource in deleted_resource:
-                        print(resource)
                         resource_id = resource.id
-                        logic.get_action('file_remove')(config, {'resource_id': resource_id})  # working well
-                        logic.get_action('dsfile_remove')(config, {'id': resource_id})
+                        extras = resource.extras
+                        ds_active = extras.get('datastore_active')
 
-                        print('################################ view.admin.trash line 180 #############################')
-                        print('finish file_remove and datastore_delete resource_id= {0}').format(resource_id)
+                        logic.get_action('file_remove')(config, {'id': resource_id})  # working well
+                        if ds_active is True:
+                            logic.get_action('dsfile_remove')(config, {'id': resource_id})
+
+                    # for plugin in plugins.PluginImplementations(plugins.IResourceController):
+                    #     plugin.before_delete(config, deleted_resource, resource)
 
                     revisions = [x[0] for x in pkg.all_related_revisions]
                     # ensure no accidental purging of other(non-deleted)
