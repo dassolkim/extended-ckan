@@ -113,9 +113,24 @@ class DatapusherPlugin(p.SingletonPlugin):
                 # 1 parameter
                 context = {'model': model, 'ignore_auth': True,
                            'defer_commit': True}
-                if (entity.format and
-                        entity.format.lower() in self.datapusher_formats and
-                        entity.url_type != 'datapusher'):
+
+                # if (entity.format and
+                #         entity.format.lower() not in self.datapusher_formatsentity.url_type != 'datapusher'):
+                #     try:
+                #         log.debug('Submitting resource {0}'.format(entity.id) +
+                #                   ' to ResourceUpload')
+                #         p.toolkit.get_action('resource_upload')(context, {
+                #             'resource_id': entity.id
+                #         })
+                #     except p.toolkit.ValidationError as e:
+                #         # If datapusher is offline want to catch error instead
+                #         # of raising otherwise resource save will fail with 500
+                #         log.critical(e)
+                #         pass
+                if entity.url_type != 'datapusher':
+                # if (entity.format and
+                #         entity.format.lower() in self.datapusher_formats and
+                #         entity.url_type != 'datapusher'):
 
                     try:
                         task = p.toolkit.get_action('task_status_show')(
