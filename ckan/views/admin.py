@@ -166,13 +166,13 @@ class TrashView(MethodView):
 
                 for pkg in self.deleted_packages:
                     package_id = pkg.id
+                    # add remove file in filestore and datastore
                     deleted_resource = model.Session.query(
                         model.Resource).filter_by(package_id=package_id)
                     for resource in deleted_resource:
                         resource_id = resource.id
                         extras = resource.extras
                         ds_active = extras.get('datastore_active')
-
                         logic.get_action('file_remove')(config, {'id': resource_id})  # working well
                         if ds_active is True:
                             logic.get_action('dsfile_remove')(config, {'id': resource_id})
