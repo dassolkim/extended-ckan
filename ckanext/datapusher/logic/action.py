@@ -58,9 +58,6 @@ def datapusher_submit(context, data_dict):
 
     p.toolkit.check_access('datapusher_submit', context, data_dict)
     # res_dict = p.toolkit.get_action('resource_show')(context, {'id': res_id})
-    # print('##################################### datapusher.logic.action datapusher_submit line 60 #####################################')
-    # print(data_dict)
-    # print(res_dict)
     try:
         resource_dict = p.toolkit.get_action('resource_show')(context, {
             'id': res_id,
@@ -143,10 +140,7 @@ def datapusher_submit(context, data_dict):
                 }
             }))
         r.raise_for_status()
-        #######
-        # print('##################################### datapusher.logic.action datapusher_submit line 143 #####################################')
-        # resource_upload(resource_dict)
-        #######
+
     except requests.exceptions.ConnectionError as e:
         error = {'message': 'Could not connect to DataPusher.',
                  'details': str(e)}
@@ -181,10 +175,8 @@ def datapusher_submit(context, data_dict):
 
     return True
 
+# add real file harvester
 def resource_upload(context, data_dict):
-
-    # print('*************************** call resource_upload *********************************')
-    # data_dict = p.toolkit.get_action('resource_show')(context, {'id': res_id})
 
     if 'url' in data_dict:
         url = data_dict['url']
@@ -209,16 +201,12 @@ def resource_upload(context, data_dict):
         )
         response.raise_for_status()
         cl = response.headers.get('content-length')
-        # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! check response.headers !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-        print(response.headers)
         ct = response.headers.get('Content-Type')
         fn = response.headers.get('filename')
         if cl and int(cl) > MAX_CONTENT_LENGTH:
             raise p.toolkit.ValidationError('Resource too large to download:{cl} > max ({max_cl})'
                                             .format(cl=cl, max_cl=MAX_CONTENT_LENGTH))
-            # raise util.JobError(
-            #     'Resource too large to download: {cl} > max ({max_cl}).'
-            #        .format(cl=cl, max_cl=MAX_CONTENT_LENGTH))
+
         directory = upload.get_directory(resource_id)
         filepath = upload.get_path(resource_id)
         filename = data_dict['name']
@@ -226,19 +214,14 @@ def resource_upload(context, data_dict):
         temp = tempfile.TemporaryFile()
         length = 0
         log.debug('Start Download Resource {0}'.format(resource_id))
-        # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Start download real resource in tempfile line 223 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+
         for chunk in response.iter_content(CHUNK_SIZE):  # resource store in tempfile
             length += len(chunk)
             if length > MAX_CONTENT_LENGTH:
                 raise p.toolkit.ValidationError('Resource too large to download:{cl} > max ({max_cl})'
                                                 .format(cl=cl, max_cl=MAX_CONTENT_LENGTH))
-                # raise util.JobError(
-                #     'Resource too large to process: {cl} > max ({max_cl}).'
-                #         .format(cl=length, max_cl=MAX_CONTENT_LENGTH))
             temp.write(chunk)
         log.debug('Finish Download Resource File in Tempfile')
-        # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Finish download real resource in tempfile line 233 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-
 
         if filename:
             try:
@@ -266,45 +249,9 @@ def resource_upload(context, data_dict):
                     raise logic.ValidationError(
                         {'upload': ['File upload too large']}
                     )
-            # print(output_file)
-            # upload.upload(resource_id, uploader.get_max_resource_size())
-            # dataset_id = data_dict['package_id']
-            # resource_name = data_dict['name']
-            # shutil.copyfile(output_file, )
-            # up = {'file':(d_file, open(d_output_file, 'r', buffering=-1), "multipart/form-data")}
-            # extras = data_dict.get('extras', [])
-            # new_url = 'http://114.70.235.44:65000/dataset/{0}/resource/{1}/{2}'.format(dataset_id, resource_id, resource_name)
-            # headers = {'Authorization': 'f91cafff-3f29-4e03-8dfb-ba30d74b4c81'}
-            # data = {'id':resource_id}
-            # file = {'file': d_output_file.read()}
-            # first = resource_id[0:3]
-            # second = resource_id[3:6]
-            # last = resource_id[6:]
-            # print('############################### datapusher resource_update check upload file line 281 ################################')
-            # print(file)
-            # requests.post('http://114.70.235.44:65000/api/action/resource_update',
-            #                   data=data, headers=headers, files=[('upload', file('/var/lib/ckan/default/resources/{0}/{1}/{2}'.format(first, second, last)))])
-            # print(r)
-            # print(r.json())
-
-            # p.toolkit.get_action('resource_update')(context, {'id': resource_id,
-            #                                                   'upload': r
-            #                                                   # 'upload': new_url
-            #                                                   })
-
-            # p.toolkit.get_action('resource_update')(context, {'id': resource_id, 'url': new_url})
-            # print(d_output_file)
-            # print(dataset_id)
-            # print(new_url)
-            # requests.post('http://114.70.235.44:65000/api/action/resource_update', data={"id": resource_id}, files=[('upload', filepath)])
-
-            # print('################################ resource_update in datapusher line 270 ###############################')
             output_file.close()
-            # d_output_file.close()
             os.rename(tmp_filepath, filepath)
-            # os.rename(d_tmp_filepath, filepath)
             # add request form-data
-            # ###############################################
         log.debug('Real Data Import finished')
 
     except requests.exceptions.HTTPError, e:
@@ -318,26 +265,12 @@ def resource_upload(context, data_dict):
                  'details': body,
                  'status_code': response.status_code}
         raise p.toolkit.ValidationError(error)
-    # except requests.HTTPError as e:
-    #     raise HTTPError(
-    #         "DataPusher received a bad HTTP response when trying to download "
-    #         "the data file", status_code=e.response.status_code,
-    #         request_url=url, response=e.response.content)
+
     except requests.exceptions.RequestException as e:
-        # try:
-        #     print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        #     print(e.response)
-        #     body = e.response
-        # except ValueError:
-        #     body = e.response.text
         log.debug('ckanext/datapusher/logic/action.py 342 line requests.exceptions.RequestException Error')
         error = {'message': str(e),
                  'status_code': None}
         raise p.toolkit.ValidationError(error)
-    # except requests.RequestException as e:
-    #     raise HTTPError(
-    #         message=str(e), status_code=None,
-    #         request_url=url, response=None)
 
 
 def datapusher_hook(context, data_dict):
