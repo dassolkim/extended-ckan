@@ -205,10 +205,8 @@ def dsfile_remove(context, data_dict):
     headers = {'Content-Type': 'application/json', 'Authorization': 'f91cafff-3f29-4e03-8dfb-ba30d74b4c81'}
     data = {'resource_id': id, 'force': True}
     response = requests.post(url=url, headers=headers, data=json.dumps(data))
-    # print('################################## finish delete resource in datastore ##########################')
-    # print(response)
-    # print(response.json())
     log.debug('Delete {0} resource in Datastore'.format(id))
+    
 import ckan.lib.uploader as uploader
 import os
 
@@ -219,8 +217,6 @@ def file_remove(context, data_dict):
     directory = os.path.join(storage_path, 'resources', resource_id[0:3], resource_id[3:6])
     filepath = os.path.join(directory, resource_id[6:])
     # print('################################## finish delete resource in filestore ##########################')
-    # print(directory)
-    # print(filepath)
     try:
         os.remove(filepath)
         # print('remove filepath {0}').format(filepath)
