@@ -201,12 +201,14 @@ import json
 def dsfile_remove(context, data_dict):
 
     id = data_dict.get('id')
-    url = 'http://114.70.235.44:65000/api/action/datastore_delete'
-    headers = {'Content-Type': 'application/json', 'Authorization': 'f91cafff-3f29-4e03-8dfb-ba30d74b4c81'}
+    # Enter your ckan_url int the url field.
+    url = 'http://ckan_url/api/action/datastore_delete'
+    # Enter your user authorization api-key.
+    headers = {'Content-Type': 'application/json', 'Authorization': 'api-key(e.g. f91cafff-3f29-4e03-8dfb-ba30d74b4c81)'}
     data = {'resource_id': id, 'force': True}
     response = requests.post(url=url, headers=headers, data=json.dumps(data))
     log.debug('Delete {0} resource in Datastore'.format(id))
-    
+
 import ckan.lib.uploader as uploader
 import os
 
